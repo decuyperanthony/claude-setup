@@ -1,45 +1,67 @@
 # claude-setup
 
-Repo de transport pour mes préférences de craft Claude Code : reprendre **mes réglages +
-mes skills** sur un nouveau poste par copier-coller.
+Ma trousse Claude Code perso, packagée en **marketplace de plugins** : reprendre mes
+réglages + mes skills sur un nouveau poste **sans copier-coller**.
 
-Contenu = uniquement des préférences personnelles génériques (style de code, workflow,
-sécurité de base, status line) et des pointeurs vers des skills publics.
+Contenu = préférences de craft génériques (style de code, workflow, sécurité de base,
+status line) + skills. Rien de spécifique à un projet, un client ou un employeur.
 
-## Comment s'en servir
-
-**Option A — filer ce README à Claude Code.**
-Ouvre Claude Code dans ton repo, colle **tout ce README**, dis :
-
-> « Applique ce setup. Fais §1 à §5 une par une, montre-moi chaque diff avant d'écrire. »
-
-**Option B — manuel.** Copie chaque bloc marqué 📋 dans le fichier indiqué. Versions brutes
-dans le repo : [`CLAUDE.md`](./CLAUDE.md), [`settings.json`](./settings.json),
-[`statusline.sh`](./statusline.sh),
-[`settings.local.example.json`](./settings.local.example.json),
-[`output-styles/emoji-stylish.md`](./output-styles/emoji-stylish.md).
-
-Les blocs inline ci-dessous sont identiques à ces fichiers — si un jour ils divergent, **le
-fichier fait foi**.
+```
+.claude-plugin/marketplace.json   → déclare la marketplace "anthony"
+.claude-plugin/plugin.json        → déclare le plugin "anthony-setup"
+commands/apply-setup.md           → /anthony-setup:apply-setup  (écrit CLAUDE.md, settings, statusline, output style)
+skills/{caveman,zoom-out}/        → skills persos (vendored, MIT — cf. NOTICE)
+reference/                        → SOURCE DE VÉRITÉ des fichiers de conf
+  ├── global-CLAUDE.md            → destiné à ~/.claude/CLAUDE.md
+  ├── settings.json               → à merger dans ~/.claude/settings.json
+  ├── statusline.sh               → destiné à ~/.claude/statusline.sh
+  ├── emoji-stylish.md            → destiné à ~/.claude/output-styles/
+  └── settings.local.example.json → point de départ pour .claude/settings.local.json (par repo)
+```
 
 ---
 
-## §0 — Instructions pour le Claude qui lit ce fichier
+## Méthode recommandée — plugin
 
-Fais dans l'ordre, en confirmant chaque étape (diff avant écriture) :
+Sur le nouveau poste :
 
-1. **§1** → `~/.claude/CLAUDE.md`. S'il existe, montre un diff et demande avant d'écraser.
-2. **§2** → installe les plugins (commandes `claude plugin …`), puis lance
-   `/setup-matt-pocock-skills` dans le repo courant.
-3. **§3** → merge dans `~/.claude/settings.json` (ne pas écraser les clés déjà présentes).
-4. **§4** → écris `~/.claude/statusline.sh`, `chmod +x`, vérifie que `statusLine` est dans settings.
-5. **§4b** _(optionnel)_ → `~/.claude/output-styles/emoji-stylish.md`.
+```bash
+claude plugin marketplace add decuyperanthony/claude-setup
+claude plugin install anthony-setup@anthony
+```
 
-Ne touche à **rien d'autre** dans `~/.claude/` (credentials, historique, sessions).
+Puis dans une session Claude Code :
+
+```
+/anthony-setup:apply-setup
+```
+
+La commande lit `reference/`, montre un diff pour chaque fichier, écrit après confirmation
+(`~/.claude/CLAUDE.md`, merge `~/.claude/settings.json`, `~/.claude/statusline.sh` + `chmod +x`,
+`~/.claude/output-styles/emoji-stylish.md`), puis affiche les étapes restantes (skills, redémarrage).
+
+Mise à jour ultérieure : `claude plugin update anthony-setup@anthony` puis relancer la commande.
+
+### Détails d'accès
+
+- `decuyperanthony/claude-setup` clone en **SSH par défaut**. Sans clé SSH sur le poste :
+  `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1`, ou URL complète :
+  `claude plugin marketplace add https://github.com/decuyperanthony/claude-setup.git`
+  (utilise les credential helpers git, comme `gh auth login`).
+- Repo privé = credentials git requis. Le contenu étant générique et sans rien de sensible,
+  **le passer en public** supprime toute friction d'auth.
+- Si `claude plugin marketplace add` échoue, `/status` indique quelle source de settings s'applique.
 
 ---
 
-## §1 — 📋 `~/.claude/CLAUDE.md`
+## Fallback manuel (si les plugins sont indisponibles)
+
+Filer **tout ce README** à Claude Code : « Applique ce setup, §1 à §5, diff avant chaque
+écriture. » Ou copier chaque bloc à la main depuis les fichiers de `reference/` (ouvrables
+en raw dans le navigateur). Les blocs inline ci-dessous **doivent rester identiques** aux
+fichiers de `reference/` — en cas de doute, `reference/` fait foi.
+
+### §1 — `~/.claude/CLAUDE.md` — voir [`reference/global-CLAUDE.md`](./reference/global-CLAUDE.md)
 
 ````markdown
 # CLAUDE.md — Préférences Anthony
@@ -139,79 +161,59 @@ Ne jamais committer : `.env*`, `*.pem`, `*.key`, `credentials.json`, `service-ac
 - En cas de doute → demander avant de créer des fichiers, des abstractions ou de nouveaux patterns.
 ````
 
----
-
-## §2 — 📋 Skills
+### §2 — Skills (référence)
 
 ```bash
-# Skills d'ingénierie de Matt Pocock
 claude plugin marketplace add mattpocock/skills
 claude plugin install mattpocock-skills@mattpocock
-
-# Catalogue communautaire officiel (plugins épinglés sur SHA + screening Anthropic)
 claude plugin marketplace add anthropics/claude-plugins-community
 ```
 
-La marketplace `anthropics/claude-plugins-official` est ajoutée automatiquement au premier
-lancement interactif — pas besoin de l'ajouter à la main.
+`anthropics/claude-plugins-official` est ajoutée automatiquement au premier lancement interactif.
 
-> **Doublons** : `handoff`, `improve-codebase-architecture`, `tdd`, `grill-with-docs` peuvent
-> exister à la fois dans le plugin **et** copiés dans `~/.claude/skills/`. Les deux se
-> chargent → contexte gaspillé à chaque tour. **Ne pas recopier les skills du plugin dans
-> `~/.claude/skills/`.** Si des copies traînent déjà, les supprimer.
+> **Doublons** : ne pas recopier les skills du plugin dans `~/.claude/skills/` — les deux se
+> chargent et gaspillent du contexte à chaque tour. Supprimer les copies qui traînent.
 
-### `mattpocock-skills` — ce que j'utilise et quand
+**`mattpocock-skills` — ce que j'utilise :**
 
-| Skill                           | Quand l'appeler                                                                                                     |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `setup-matt-pocock-skills`      | **Une fois par repo, en premier.** Sans lui, les skills liés au tracker (ci-dessous) ne savent pas où chercher. |
-| `code-review`                   | Avant un merge / sur une PR. 2 axes en sous-agents parallèles : **Standards** (conventions repo) + **Spec** (le code fait ce que le ticket demande), + 12 code smells de Fowler. **Mon préféré.** |
-| `diagnosing-bugs`               | Bug dur / régression de perf. Boucle repro → minimise → hypothèse → instrumente → fix → test de non-régression.  |
-| `tdd`                           | Feature / fix en test-first. Red → green → refactor.                                                             |
-| `codebase-design`               | Concevoir / améliorer l'interface d'un module (deep modules, où placer un seam, testabilité).                    |
-| `domain-modeling`               | Figer le vocabulaire métier (ubiquitous language), écrire un ADR.                                                |
-| `grilling` / `grill-with-docs` / `grill-me` | Stress-tester un plan / une décision avant de coder.                                                 |
-| `resolving-merge-conflicts`     | Résoudre un merge / rebase en cours proprement.                                                                 |
-| `research`                      | Sous-agent background : investigue une question contre des sources fiables, produit un `.md` dans le repo.       |
-| `prototype`                     | Prototype jetable pour valider un modèle d'état / une UI avant de s'engager.                                     |
-| `handoff`                       | Compacter la conversation en doc de passation.                                                                  |
-| `improve-codebase-architecture` | Trouver des opportunités de refacto / consolidation.                                                            |
-| `codebase-design` / `ask-matt`  | `ask-matt` = routeur quand je ne sais pas quel skill appeler.                                                    |
-| `teach`                         | Explication pédagogique d'un bout de code / concept.                                                             |
-| `writing-great-skills`          | Quand j'écris mes propres skills.                                                                                |
+| Skill | Quand |
+| --- | --- |
+| `setup-matt-pocock-skills` | **Une fois par repo, en premier.** Sans lui, les skills tracker ne savent pas où chercher. |
+| `code-review` | Avant merge / sur PR. 2 axes en sous-agents : **Standards** + **Spec**, + 12 code smells Fowler. **Préféré.** |
+| `diagnosing-bugs` | Bug dur / perf. repro → minimise → hypothèse → instrumente → fix → test. |
+| `tdd` | Feature / fix test-first. |
+| `codebase-design` | Concevoir l'interface d'un module (deep modules, seams, testabilité). |
+| `domain-modeling` | Vocabulaire métier, ADR. |
+| `grilling` / `grill-with-docs` / `grill-me` | Stress-test d'un plan avant de coder. |
+| `resolving-merge-conflicts` | Merge / rebase en cours. |
+| `research` | Sous-agent background → investigation → `.md` dans le repo. |
+| `prototype` | Prototype jetable pour valider un modèle d'état / une UI. |
+| `handoff` | Doc de passation. |
+| `improve-codebase-architecture` | Opportunités de refacto / consolidation. |
+| `ask-matt` | Routeur quand je ne sais pas quel skill appeler. |
+| `teach` / `writing-great-skills` | Pédagogie / écrire ses propres skills. |
 
-**⚠️ Nécessitent `/setup-matt-pocock-skills` + un tracker GitHub ou Linear** (tombent en mode
-« fichiers locaux » sinon — inutiles si le tracker est Jira) : `to-spec`, `to-tickets`,
-`triage`, `implement`, `wayfinder`.
+**⚠️ Nécessitent `/setup-matt-pocock-skills` + tracker GitHub ou Linear** (inutiles si Jira) :
+`to-spec`, `to-tickets`, `triage`, `implement`, `wayfinder`.
 
-### `claude-plugins-official` — à ajouter en priorité
+**`claude-plugins-official` — à ajouter en priorité :**
 
-| Plugin                 | Pourquoi                                                                                       | Type        |
-| ---------------------- | -------------------------------------------------------------------------------------------- | ----------- |
-| `security-guidance`    | Review sécu de **chaque** changement pendant que l'agent code, correction dans la foulée.     | skills only |
-| `typescript-lsp`       | Diagnostics temps réel après edit + go-to-def / find-refs. Gros gain sur du TS strict. Besoin du binaire `typescript-language-server`. | LSP local   |
-| `claude-md-management` | Audite et améliore les `CLAUDE.md`.                                                          | skills only |
-| `modern-web-guidance`  | Maintient l'agent à jour sur les best practices web.                                          | skills only |
-| `frontend-design`      | UI front qualité prod, évite le rendu générique.                                              | skills only |
-| `playwright`           | Si e2e / faire voir l'app à l'agent.                                                          | **MCP**     |
+| Plugin | Pourquoi | Type |
+| --- | --- | --- |
+| `security-guidance` | Review sécu de chaque changement pendant le code + correction. | skills only |
+| `typescript-lsp` | Diagnostics temps réel + go-to-def / find-refs. Besoin de `typescript-language-server`. | LSP local |
+| `claude-md-management` | Audite / améliore les `CLAUDE.md`. | skills only |
+| `modern-web-guidance` | Best practices web à jour. | skills only |
+| `frontend-design` | UI front qualité prod. | skills only |
+| `playwright` | e2e / faire voir l'app à l'agent. | **MCP** |
 
-> Les plugins **skills only** n'ouvrent aucune connexion sortante. Ceux qui embarquent un
-> **MCP server** (`github`, `figma`, `sentry`, `atlassian`, `playwright`…) ouvrent un process
-> et/ou une connexion — à installer en connaissance de cause.
+> Skills only = aucune connexion sortante. Ceux qui embarquent un **MCP** (`github`, `figma`,
+> `sentry`, `atlassian`, `playwright`…) ouvrent un process/une connexion — installer en connaissance de cause.
 
-### Natifs Claude Code (rien à installer)
+**Natifs (rien à installer) :** `/code-review` (correctness + cleanups, `--fix`, `--comment` ;
+différent de `mattpocock:code-review`), `/security-review`, `/init`.
 
-| Commande           | Usage                                                                                                          |
-| ------------------ | ---------------------------------------------------------------------------------------------------------- |
-| `/code-review`     | Review du diff courant (ou PR / branche). Correctness + cleanups, effort `low`→`ultra`, `--fix`, `--comment`. Différent de `mattpocock:code-review` (lui = 2 axes Standards/Spec). Les deux se complètent. |
-| `/security-review` | Revue sécu des changements de la branche.                                                                     |
-| `/init`            | Générer un `CLAUDE.md` de repo au premier passage.                                                            |
-
-Annuaires de découverte (pas des sources d'install) : `claudepluginhub.com`, `claudemarketplaces.com`.
-
----
-
-## §3 — 📋 `~/.claude/settings.json` (merge, n'écrase pas)
+### §3 — `~/.claude/settings.json` — voir [`reference/settings.json`](./reference/settings.json)
 
 ```json
 {
@@ -219,133 +221,56 @@ Annuaires de découverte (pas des sources d'install) : `claudepluginhub.com`, `c
   "effortLevel": "high",
   "theme": "dark",
   "outputStyle": "emoji-stylish",
-  "statusLine": {
-    "type": "command",
-    "command": "~/.claude/statusline.sh",
-    "padding": 0
-  },
-  "enabledPlugins": {
-    "mattpocock-skills@mattpocock": true
-  },
+  "statusLine": { "type": "command", "command": "~/.claude/statusline.sh", "padding": 0 },
+  "enabledPlugins": { "mattpocock-skills@mattpocock": true },
   "extraKnownMarketplaces": {
-    "mattpocock": {
-      "source": { "source": "github", "repo": "mattpocock/skills" }
-    }
+    "mattpocock": { "source": { "source": "github", "repo": "mattpocock/skills" } }
   }
 }
 ```
 
-> - `claude plugin install` écrit lui-même `enabledPlugins` — le garder ici est juste une ceinture+bretelles.
-> - Volontairement **sans** `permissions.defaultMode: "bypassPermissions"` ni
->   `skipDangerousModePermissionPrompt`. Si ta machine perso les a, **ne pas les recopier ici** :
->   c'est un choix conscient pour le perso, pas un défaut à transporter.
+> Volontairement **sans** `permissions.defaultMode: "bypassPermissions"` ni
+> `skipDangerousModePermissionPrompt`. Si ta machine perso les a, **ne pas les recopier ici**.
+
+### §4 — Status line — voir [`reference/statusline.sh`](./reference/statusline.sh)
+
+Script Python auto-suffisant. Affiche : `🟢 <blaze> ♡ <modèle> (taille ctx) ♡ 📁 <dossier>
+♡ 🌿 <branche> ♡ ◌ ctx <N>% ▓▓░░░░ <kaomoji>`. Le **% de contexte** + la barre (verte →
+jaune → rouge) = le signal important. Thème sombre + vert.
+
+Manuel : écrire dans `~/.claude/statusline.sh`, `chmod +x`, ajouter le bloc `statusLine` (§3),
+nouvelle session. Perso via le bloc `CONFIG` en haut (`NAME`, `DOT`, `KAOMOJI`).
+
+**cmux** : la status line est une feature du CLI (le JSON `context_window` vient de Claude
+Code, pas du terminal). Identique sur cmux tant qu'il lance de vraies sessions CLI lisant
+`~/.claude/settings.json`. S'il impose sa propre UI, il peut la masquer — à vérifier sur place.
+
+### §4b — Output style (optionnel) — voir [`reference/emoji-stylish.md`](./reference/emoji-stylish.md)
+
+Écrire dans `~/.claude/output-styles/emoji-stylish.md`. Activation : `"outputStyle":
+"emoji-stylish"` dans `~/.claude/settings.json` (le menu `/config` n'écrit qu'au niveau
+projet). Prise en compte après `/clear` ou nouvelle session. _(La commande `/output-style` a
+été retirée dans une version récente.)_
+
+### §5 — Permissions par repo — voir [`reference/settings.local.example.json`](./reference/settings.local.example.json)
+
+Se configure dans chaque repo (`.claude/settings.local.json`), pas en global. L'exemple ne
+contient que du **vraiment read-only** + un bloc `deny` (`.env`, `*.key`, `~/.ssh`,
+credentials) — les règles `deny` s'appliquent tout de suite, sans attendre le trust du
+dossier. **Ne pas** y mettre `find`, `cat`, `git push`, `pnpm add/install` en wildcard.
 
 ---
 
-## §4 — 📋 Status line perso
+## Faire encore mieux (plus tard)
 
-Script auto-suffisant Python : [`statusline.sh`](./statusline.sh). Une ligne :
+- `apply-setup` pourrait aussi lancer les `claude plugin …` de §2 directement (aujourd'hui
+  il ne fait qu'afficher les commandes — plus sûr pour une première passe).
+- Ajouter mes propres skills quand j'en aurai écrit (`claude plugin init <nom>` scaffolde
+  `~/.claude/skills/<nom>/` en local avant de le pousser ici).
+- Passer le repo en public → zéro friction d'auth git.
 
-`🟢 <blaze>  ♡  <modèle> (taille contexte)  ♡  📁 <dossier>  ♡  🌿 <branche>  ♡  ◌ ctx <N>% ▓▓░░░░ <kaomoji>`
-
-Le **% de contexte** + la barre (verte → jaune → rouge) sont le signal important : on voit
-d'un coup d'œil quand la fenêtre sature. Thème **sombre + vert**.
-
-Installation :
-
-1. Écrire le contenu de [`statusline.sh`](./statusline.sh) dans `~/.claude/statusline.sh`
-2. `chmod +x ~/.claude/statusline.sh`
-3. Bloc `statusLine` dans `~/.claude/settings.json` (déjà en §3)
-4. Nouvelle session Claude Code
-
-**Personnalisation** (bloc `CONFIG` en haut du script) : `NAME` (blaze ; vide = fallback
-`git config user.name` puis `$USER`), `DOT` (pastille avant le nom), `KAOMOJI` (motif de fin).
-Couleurs / emojis : constantes ANSI + lignes `parts.append(...)` juste dessous.
-
-**cmux** : la status line est une fonctionnalité du CLI (le JSON `context_window` vient de
-Claude Code, pas du terminal). Tant que cmux lance de vraies sessions Claude Code qui lisent
-`~/.claude/settings.json`, le rendu et le `ctx %` sont identiques. Si cmux impose sa propre
-UI, il peut masquer la ligne — à vérifier sur place.
-
----
-
-## §4b — 📋 (optionnel) Output style « emoji-stylish »
-
-Écrire [`output-styles/emoji-stylish.md`](./output-styles/emoji-stylish.md) dans
-`~/.claude/output-styles/emoji-stylish.md`.
-
-Activation : ajouter `"outputStyle": "emoji-stylish"` dans `~/.claude/settings.json` (déjà en
-§3). Le menu `/config` → Output style écrit le choix dans `.claude/settings.local.json`
-(niveau projet seulement) — donc passer par le settings global. Prise en compte après `/clear`
-ou nouvelle session.
-
-_(La commande `/output-style` a été retirée dans une version récente de Claude Code.)_
-
----
-
-## §5 — Permissions par repo (`.claude/settings.local.json`)
-
-Se configure **dans chaque repo**, pas en global. Point de départ dans
-[`settings.local.example.json`](./settings.local.example.json) : uniquement du **vraiment
-read-only** + un bloc `deny` qui bloque la lecture de `.env`, clés, `~/.ssh`, credentials
-(les règles `deny` s'appliquent tout de suite, sans attendre le trust du dossier).
-
-À copier vers `.claude/settings.local.json` du repo, puis compléter au fil de l'eau avec les
-commandes que tu approuves souvent. **Ne pas** y mettre `find`, `cat`, `git push`,
-`pnpm add/install` en wildcard : ça revient à de l'exécution/lecture arbitraire sans prompt.
-
----
-
-## §6 — Faire mieux : ce repo en plugin
-
-Plus propre qu'un fichier à coller : packager tout ça en **plugin de marketplace**.
-
-```
-claude plugin marketplace add decuyperanthony/claude-setup
-claude plugin install anthony-setup@anthony
-# puis dans la session :
-/anthony-setup:apply-setup
-```
-
-Layout cible :
-
-```
-claude-setup/
-├── .claude-plugin/
-│   ├── marketplace.json     # { "name": "anthony", "plugins": [{ "name": "anthony-setup", "source": "./" }] }
-│   └── plugin.json          # { "name": "anthony-setup", "version": "1.0.0" }
-├── skills/
-│   ├── apply-setup/SKILL.md # lit reference/global-CLAUDE.md, diff, écrit ~/.claude/CLAUDE.md après confirmation ; merge settings.json
-│   ├── caveman/SKILL.md     # mes skills perso, embarqués
-│   └── zoom-out/SKILL.md
-├── output-styles/emoji-stylish.md
-└── reference/
-    ├── global-CLAUDE.md     # source de vérité unique des préférences
-    └── settings.json
-```
-
-Ce qu'on gagne : zéro copier-coller, `claude plugin update` pour les màj, skills perso
-(`caveman`, `zoom-out`) transportés d'office, source de vérité unique, versionné/rollbackable.
-
-Détails d'accès :
-
-- `owner/repo` clone en **SSH par défaut**. Sans clé SSH : `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1`,
-  ou URL complète `claude plugin marketplace add https://github.com/decuyperanthony/claude-setup.git`
-  (utilise les credential helpers git, comme `gh auth login`).
-- Sans git du tout : marketplace via **URL directe** vers un `marketplace.json` hébergé +
-  entrée plugin `source: "archive"` (zip HTTPS + `sha256`).
-- Repo privé = credentials git requis. Le contenu étant générique et sans rien de sensible,
-  **le passer en public** supprime toute friction d'auth.
-
-Si `claude plugin marketplace add` échoue, `/status` indique quelle source de settings
-s'applique.
-
-_À faire quand j'aurai le temps ; le fichier unique de ce README suffit pour démarrer._
-
----
-
-## Ce qui n'est PAS dans ce repo (volontairement)
+## Ce qui n'est PAS dans ce repo
 
 - Aucun code, doc, nom de projet, de client ou d'employeur — que des préférences de craft génériques.
-- Aucun secret : pas de `.credentials.json`, pas d'historique de conversations, pas de sessions.
+- Aucun secret : pas de `.credentials.json`, pas d'historique, pas de sessions.
 - `settings.local.json` réel (allowlist accumulée) — seul un exemple élagué est fourni.

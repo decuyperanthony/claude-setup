@@ -1,0 +1,11 @@
+{
+  "name": "anthony-setup",
+  "version": "1.0.0",
+  "description": "Applique mes préférences globales Claude Code + skills perso.",
+  "author": {
+    "name": "Anthony de Cuyper"
+  },
+  "keywords": ["setup", "preferences", "dotfiles", "statusline"],
+  "commands": ["./commands/apply-setup.md"],
+  "skills": ["./skills/caveman", "./skills/zoom-out"]
+}

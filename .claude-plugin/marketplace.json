@@ -1,0 +1,16 @@
+{
+  "name": "anthony",
+  "owner": {
+    "name": "Anthony de Cuyper"
+  },
+  "description": "Ma trousse Claude Code perso : préférences de craft, status line, skills.",
+  "plugins": [
+    {
+      "name": "anthony-setup",
+      "source": "./",
+      "description": "Applique mes préférences globales Claude Code (CLAUDE.md, settings, status line, output style) + skills perso.",
+      "category": "productivity",
+      "keywords": ["setup", "preferences", "dotfiles", "statusline"]
+    }
+  ]
+}
