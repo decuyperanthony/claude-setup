@@ -6,6 +6,26 @@ réglages + mes skills sur un nouveau poste **sans copier-coller**.
 Contenu = préférences de craft génériques (style de code, workflow, sécurité de base,
 status line) + skills. Rien de spécifique à un projet, un client ou un employeur.
 
+## TL;DR — sur un nouveau poste
+
+```bash
+claude plugin marketplace add decuyperanthony/claude-setup
+claude plugin install anthony-setup@anthony
+# clé SSH absente ? → CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1 devant, ou l'URL .git en HTTPS
+```
+
+Nouvelle session Claude Code, puis :
+
+```
+/anthony-setup:apply-setup
+```
+
+La commande écrit `~/.claude/CLAUDE.md`, merge `~/.claude/settings.json`, installe la status
+line + l'output style — **diff + confirmation à chaque fichier** — puis liste les skills à
+installer. Testé OK (`claude plugin validate` ✔).
+
+Pas d'accès `claude plugin` ? → « [Fallback manuel](#fallback-manuel-si-les-plugins-sont-indisponibles) » plus bas : donner tout ce README à Claude Code.
+
 ```
 .claude-plugin/marketplace.json   → déclare la marketplace "anthony"
 .claude-plugin/plugin.json        → déclare le plugin "anthony-setup"
