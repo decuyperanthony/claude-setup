@@ -1,5 +1,5 @@
 ---
-name: Emoji Stylé
+name: emoji-stylish
 description: Stylish & expressive tone with tasteful emojis, full coding ability kept
 keep-coding-instructions: true
 ---
